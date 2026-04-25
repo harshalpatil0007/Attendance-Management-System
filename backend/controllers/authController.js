@@ -280,8 +280,16 @@ const resetPassword = async (req, res) => {
 // @route   GET /api/auth/captcha
 // @access  Public
 const getCaptcha = (req, res) => {
-    const { svg, token } = generateCaptcha();
-    res.json({ svg, captchaToken: token });
+    try {
+        const { svg, token } = generateCaptcha();
+        if (!svg || !token) {
+            throw new Error('Failed to generate captcha: empty response');
+        }
+        res.json({ svg, captchaToken: token });
+    } catch (error) {
+        console.error('Error in getCaptcha:', error.message);
+        res.status(500).json({ message: 'Error generating captcha', error: error.message });
+    }
 };
 
 // @desc    Update face descriptor

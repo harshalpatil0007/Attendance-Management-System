@@ -6,23 +6,32 @@ const jwt = require('jsonwebtoken');
  * @returns {Object} { svg, token }
  */
 const generateCaptcha = () => {
-    const captcha = svgCaptcha.create({
-        size: 6, // length of captcha
-        noise: 2, // number of noise lines
-        color: true,
-        background: '#f8f9fa'
-    });
+    if (!process.env.JWT_SECRET) {
+        console.warn('JWT_SECRET is not defined in environment variables! Captcha token might fail.');
+    }
 
-    const token = jwt.sign(
-        { captchaText: captcha.text.toLowerCase() },
-        process.env.JWT_SECRET,
-        { expiresIn: '5m' }
-    );
+    try {
+        const captcha = svgCaptcha.create({
+            size: 6,
+            noise: 2,
+            color: true,
+            background: '#f8f9fa'
+        });
 
-    return {
-        svg: captcha.data,
-        token
-    };
+        const token = jwt.sign(
+            { captchaText: captcha.text.toLowerCase() },
+            process.env.JWT_SECRET || 'fallback_secret_for_dev_only',
+            { expiresIn: '5m' }
+        );
+
+        return {
+            svg: captcha.data,
+            token
+        };
+    } catch (error) {
+        console.error('Error generating captcha SVG or Token:', error);
+        throw error;
+    }
 };
 
 /**

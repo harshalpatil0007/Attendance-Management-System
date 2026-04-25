@@ -29,6 +29,9 @@ const Login = () => {
   };
 
   useEffect(() => {
+    if (import.meta.env.PROD) {
+      console.log('App running in production mode. API URL:', API_BASE_URL);
+    }
     fetchCaptcha();
   }, []);
 
@@ -125,16 +128,16 @@ const Login = () => {
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Captcha Verification</label>
               <div className="flex flex-col space-y-3">
-                <div className="flex items-center gap-4 bg-slate-100 dark:bg-slate-800 p-2 rounded-xl border border-slate-200 dark:border-white/10">
+                <div className="flex items-center gap-4 bg-slate-100 dark:bg-slate-800 p-2 rounded-xl border border-slate-200 dark:border-white/10 min-h-[60px]">
                   <div 
                     className="flex-1 bg-white dark:bg-white/90 rounded-lg h-12 flex items-center justify-center overflow-hidden"
-                    dangerouslySetInnerHTML={{ __html: captchaSvg }}
+                    dangerouslySetInnerHTML={{ __html: captchaSvg || (isCaptchaLoading ? '' : '<span class="text-xs text-red-500 font-medium">Failed to load captcha. Please refresh.</span>') }}
                   />
                   <button
                     type="button"
                     onClick={fetchCaptcha}
                     disabled={isCaptchaLoading}
-                    className="p-2 text-slate-500 hover:text-brand-500 hover:bg-white rounded-lg transition-all"
+                    className="p-2 text-slate-500 hover:text-brand-500 hover:bg-white rounded-lg transition-all shadow-sm"
                     title="Refresh Captcha"
                   >
                     <RefreshCw className={`h-5 w-5 ${isCaptchaLoading ? 'animate-spin' : ''}`} />
