@@ -228,6 +228,7 @@ const ProfileSection = ({ user, refreshUser }) => {
         .withFaceLandmarks()
         .withFaceDescriptor();
 
+      if (!faceVideoRef.current) return clearInterval(interval);
       const displaySize = { width: faceVideoRef.current.videoWidth, height: faceVideoRef.current.videoHeight };
       faceapi.matchDimensions(faceCanvasRef.current, displaySize);
 

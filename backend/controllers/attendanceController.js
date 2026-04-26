@@ -165,8 +165,15 @@ const markAttendance = async (req, res) => {
                 : faces[0].embedding_data;
                 
             const dist = euclideanDistance(storedDescriptor, faceDescriptor);
-            if (dist <= 0.6) verificationSuccess = true;
-            else return res.status(401).json({ message: 'Face ID verification failed.' });
+            console.log(`Face verification for user ${student_id}: distance=${dist}, threshold=0.6`);
+            if (dist <= 0.6) {
+                verificationSuccess = true;
+            } else {
+                return res.status(401).json({ 
+                    message: 'Face ID verification failed. Distance: ' + dist.toFixed(4),
+                    distance: dist 
+                });
+            }
 
         } else if (method === 'qr') {
             if (session.qr_code_token === qr_token) verificationSuccess = true;
@@ -197,7 +204,7 @@ const markAttendance = async (req, res) => {
                 sendAttendanceConfirmation(student[0], subject[0].subject_name);
             }
         } else {
-            res.status(401).json({ message: 'Verification failed' });
+            res.status(401).json({ message: 'Verification failed: Method not validated' });
         }
     } catch (error) {
         if (error.code === 'ER_DUP_ENTRY') return res.status(400).json({ message: 'Attendance already marked.' });

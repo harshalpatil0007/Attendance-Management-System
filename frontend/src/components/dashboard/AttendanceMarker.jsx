@@ -141,6 +141,7 @@ const AttendanceMarker = ({ subjects, timetable, fetchDashboardData }) => {
                                       .withFaceLandmarks()
                                       .withFaceDescriptor();
 
+      if (!videoRef.current) return clearInterval(detectionInterval);
       const displaySize = { width: videoRef.current.videoWidth, height: videoRef.current.videoHeight };
       faceapi.matchDimensions(canvasRef.current, displaySize);
 
@@ -239,6 +240,14 @@ const AttendanceMarker = ({ subjects, timetable, fetchDashboardData }) => {
   const submitAttendance = async (m, extraData) => {
     setLoading(true);
     setStatus(null);
+    const token = localStorage.getItem('attendease_token');
+    if (!token) {
+      setStatus('error');
+      setMessage("You are not logged in. Please log in again.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await axios.post(`${API_BASE_URL}/attendance/mark` , {
         subject_id: selectedSubject,
@@ -248,7 +257,7 @@ const AttendanceMarker = ({ subjects, timetable, fetchDashboardData }) => {
         classroom_number: classroomNumber,
         ...extraData
       }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('attendease_token')}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
       
       setStatus('success');
@@ -389,7 +398,12 @@ const AttendanceMarker = ({ subjects, timetable, fetchDashboardData }) => {
                         value={uniqueCode}
                         onChange={(e) => setUniqueCode(e.target.value.toUpperCase())}
                       />
-                      <button className="mt-6 w-full py-4 bg-brand-500 text-white rounded-xl font-bold shadow-lg shadow-brand-500/30">Submit Code</button>
+                      <button 
+                        disabled={loading}
+                        className="mt-6 w-full py-4 bg-brand-500 text-white rounded-xl font-bold shadow-lg shadow-brand-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      >
+                        {loading ? 'Submitting...' : 'Submit Code'}
+                      </button>
                    </form>
                  )}
                  

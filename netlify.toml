@@ -1,0 +1,17 @@
+[build]
+  # The directory where your frontend code is located
+  base = "frontend"
+  
+  # The command to build your project
+  # Netlify automatically runs 'npm install' before this
+  command = "npm run build"
+  
+  # The directory that contains the deploy-ready static files (relative to base)
+  publish = "dist"
+
+# This section is required for Single Page Applications (like React) 
+# to handle client-side routing correctly.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
