@@ -54,13 +54,14 @@ const markAttendance = async (req, res) => {
             return res.status(400).json({ message: 'Classroom number is required.' });
         }
 
-        // Fetch session and classroom - Improved to find active session if session_id is missing
+        // Fetch session and classroom - Improved to find today's active session
         let [sessionRows] = await pool.query(`
             SELECT s.*, cl.latitude, cl.longitude, cl.geofence_radius, cl.room_number as expected_room 
             FROM attendance_sessions s
             LEFT JOIN classroom_locations cl ON s.room_id = cl.id
-            WHERE (s.id = ? OR (s.subject_id = ? AND s.is_active = TRUE)) 
+            WHERE (s.id = ? OR (s.subject_id = ? AND s.date = CURRENT_DATE AND s.is_active = TRUE)) 
             AND s.is_active = TRUE
+            ORDER BY s.created_at DESC
             LIMIT 1
         `, [session_id || 0, subject_id]);
 
@@ -180,8 +181,11 @@ const markAttendance = async (req, res) => {
             else return res.status(400).json({ message: 'Invalid or expired QR code.' });
 
         } else if (method === 'code') {
-            if (session.unique_code === unique_code) verificationSuccess = true;
-            else return res.status(400).json({ message: 'Invalid or expired unique code.' });
+            if (session.unique_code && session.unique_code.trim().toUpperCase() === unique_code.trim().toUpperCase()) {
+                verificationSuccess = true;
+            } else {
+                return res.status(400).json({ message: 'Invalid or expired unique code.' });
+            }
         }
 
         if (verificationSuccess) {

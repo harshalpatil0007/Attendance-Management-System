@@ -185,7 +185,15 @@ const AttendanceMarker = ({ subjects, timetable, fetchDashboardData }) => {
           if (!container) return;
 
           html5QrCode = new Html5Qrcode("reader");
-          const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+          const config = { 
+            fps: 10, 
+            qrbox: (viewfinderWidth, viewfinderHeight) => {
+              const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+              const qrboxSize = Math.floor(minEdge * 0.7);
+              return { width: qrboxSize, height: qrboxSize };
+            },
+            aspectRatio: 1.0
+          };
           
           await html5QrCode.start(
             { facingMode: qrFacingMode }, 
@@ -370,7 +378,7 @@ const AttendanceMarker = ({ subjects, timetable, fetchDashboardData }) => {
 
            <div className="space-y-6">
 
-              <div className="relative rounded-2xl overflow-hidden bg-slate-900 aspect-video flex items-center justify-center">
+              <div className="relative rounded-2xl overflow-hidden bg-slate-900 aspect-square flex items-center justify-center border-4 border-slate-800 shadow-2xl">
                  {method === 'face' && (
                    <>
                     <video 
@@ -386,7 +394,7 @@ const AttendanceMarker = ({ subjects, timetable, fetchDashboardData }) => {
                    </>
                  )}
                  {method === 'qr' && (
-                   <div id="reader" className="w-full h-full"></div>
+                   <div id="reader" className="w-full h-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full [&_video]:scale-110"></div>
                  )}
                  {method === 'code' && (
                    <form onSubmit={handleCodeSubmit} className="w-full px-12 text-center">

@@ -280,10 +280,33 @@ const clearTeacherNotifications = async (req, res) => {
     }
 };
 
+// @desc    Get all classes (year/division) for a specific subject
+// @route   GET /api/teacher/subject-classes/:subjectId
+// @access  Private (Teacher)
+const getSubjectClasses = async (req, res) => {
+    const { subjectId } = req.params;
+    try {
+        const [rows] = await pool.query(`
+            SELECT DISTINCT year_level as year, division, department
+            FROM timetables
+            WHERE subject_id = ?
+            UNION
+            SELECT DISTINCT year, division, department
+            FROM teacher_assignments
+            WHERE subject_id = ?
+        `, [subjectId, subjectId]);
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error fetching subject classes' });
+    }
+};
+
 module.exports = {
     getTeacherProfile,
     getTodaySchedule,
     getAssignedClasses,
+    getSubjectClasses,
     getDashboardMetrics,
     updateTeacherProfile,
     changePassword,

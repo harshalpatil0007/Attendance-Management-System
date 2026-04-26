@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
     FileText, Download, FileSpreadsheet, 
     Calendar, Users, BarChart3, ChevronRight,
-    Loader2, CheckCircle
+    Loader2, CheckCircle, AlertCircle
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { autoTable } from 'jspdf-autotable';
@@ -16,13 +16,38 @@ const ReportsSection = ({ assignedClasses }) => {
     const [selectedYear, setSelectedYear] = useState('');
     const [selectedDiv, setSelectedDiv] = useState('');
     const [iseNumber, setIseNumber] = useState('1');
+    const [extraClasses, setExtraClasses] = useState([]);
 
-    // Derive years/divisions from assignedClasses for selected subject
+    // Fetch all available classes for this subject if it's from expertise
+    useEffect(() => {
+        if (selectedSubject) {
+            fetchSubjectClasses();
+        } else {
+            setExtraClasses([]);
+        }
+    }, [selectedSubject]);
+
+    const fetchSubjectClasses = async () => {
+        try {
+            const token = localStorage.getItem('attendease_token');
+            const res = await axios.get(`${API_BASE_URL}/teacher/subject-classes/${selectedSubject}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setExtraClasses(res.data);
+        } catch (error) {
+            console.error("Error fetching subject classes:", error);
+        }
+    };
+
+    // Combine official assignments with all discovered classes for this subject
     const subjectAssignments = assignedClasses.filter(c => c.subject_id == selectedSubject);
     const isExpertiseOnly = subjectAssignments.length > 0 && subjectAssignments.every(c => c.is_expertise_only);
     
-    const availableYears = Array.from(new Set(subjectAssignments.map(c => c.year))).filter(Boolean);
-    const availableDivs = Array.from(new Set(subjectAssignments.filter(c => !selectedYear || c.year == selectedYear).map(c => c.division))).filter(Boolean);
+    // Use extraClasses if available, otherwise fallback to assignments
+    const displayClasses = extraClasses.length > 0 ? extraClasses : subjectAssignments;
+    
+    const availableYears = Array.from(new Set(displayClasses.map(c => c.year))).filter(Boolean);
+    const availableDivs = Array.from(new Set(displayClasses.filter(c => !selectedYear || c.year == selectedYear).map(c => c.division))).filter(Boolean);
 
     const fetchReportData = async () => {
         if (!selectedSubject || !selectedYear || !selectedDiv) {
@@ -305,9 +330,13 @@ const ReportsSection = ({ assignedClasses }) => {
                             )}
 
                             {isExpertiseOnly && (
-                                <div className="sm:col-span-2 p-4 bg-amber-50 border border-amber-100 rounded-2xl">
-                                    <p className="text-[10px] font-bold text-amber-700 flex items-center gap-2">
-                                        <BarChart3 className="w-4 h-4" /> This subject is in your expertise but no classes are assigned to you yet.
+                                <div className={`sm:col-span-2 p-4 ${availableYears.length > 0 ? 'bg-indigo-50 border-indigo-100' : 'bg-amber-50 border-amber-100'} rounded-2xl transition-all`}>
+                                    <p className={`text-[10px] font-bold ${availableYears.length > 0 ? 'text-indigo-700' : 'text-amber-700'} flex items-center gap-2`}>
+                                        {availableYears.length > 0 ? (
+                                            <><CheckCircle className="w-4 h-4" /> This subject is in your expertise. Showing all available classes from the timetable.</>
+                                        ) : (
+                                            <><AlertCircle className="w-4 h-4" /> This subject is in your expertise but no classes are assigned to you yet.</>
+                                        )}
                                     </p>
                                 </div>
                             )}

@@ -4,6 +4,7 @@ const {
     getTeacherProfile, 
     getTodaySchedule, 
     getAssignedClasses, 
+    getSubjectClasses,
     getDashboardMetrics,
     updateTeacherProfile,
     changePassword,
@@ -38,6 +39,7 @@ router.delete('/profile-image', deleteTeacherProfileImage);
 router.put('/change-password', changePassword);
 router.get('/today-schedule', getTodaySchedule);
 router.get('/assigned-classes', getAssignedClasses);
+router.get('/subject-classes/:subjectId', getSubjectClasses);
 router.get('/dashboard-metrics', getDashboardMetrics);
 router.get('/notifications', getTeacherNotifications);
 router.post('/clear-notifications', clearTeacherNotifications);
